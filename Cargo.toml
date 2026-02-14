@@ -1,0 +1,15 @@
+[package]
+name = "audio-visualizer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wgpu = "28"
+winit = "0.30"
+cpal = "0.15"
+rustfft = "6"
+pollster = "0.4"
+bytemuck = { version = "1", features = ["derive"] }
+hound = "3"
+log = "0.4"
+env_logger = "0.11"
