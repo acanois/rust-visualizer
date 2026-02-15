@@ -14,7 +14,7 @@ use winit::window::{Window, WindowAttributes, WindowId};
 /// Number of samples fed into each FFT frame.
 const FFT_SIZE: usize = 2048;
 /// Number of bars drawn on screen.
-const NUM_BARS: usize = 64;
+const NUM_BARS: usize = 88;
 /// Smoothing factor for bar decay (0 = instant, 1 = frozen). Higher = slower.
 const DECAY: f32 = 0.88;
 /// Gain applied to raw FFT magnitudes before display.
@@ -159,14 +159,18 @@ fn main() {
 
     let args: Vec<String> = std::env::args().collect();
 
+    // If a file is passed in the arguemnts, load it
     let audio_source = if args.len() > 1 {
         AudioSource::File(args[1].clone())
     } else {
+        // Otherwise, load use the default system device
         audio::list_input_devices();
         AudioSource::Device
     };
 
     let event_loop = EventLoop::new().expect("Failed to create event loop");
+
+    // Create a new app and pass in the audio source
     let mut app = App::new(audio_source);
     event_loop.run_app(&mut app).expect("Event loop error");
 }

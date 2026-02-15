@@ -82,7 +82,9 @@ impl Renderer {
         };
         surface.configure(&device, &config);
 
+        // ---------------------------------------------------------------
         // --- GPU buffers ---
+        // ---------------------------------------------------------------
         let magnitudes_data = vec![0.0f32; num_bars as usize];
         let magnitudes_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Magnitudes"),
@@ -102,7 +104,7 @@ impl Renderer {
 
         // --- Bind group ---
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("BGL"),
+            label: Some("Bind Group Layout"),
             entries: &[
                 wgpu::BindGroupLayoutEntry {
                     binding: 0,
@@ -128,7 +130,7 @@ impl Renderer {
         });
 
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("BG"),
+            label: Some("Bind Group"),
             layout: &bind_group_layout,
             entries: &[
                 wgpu::BindGroupEntry {
@@ -207,11 +209,8 @@ impl Renderer {
     /// Upload new magnitudes and draw one frame.
     pub fn render(&mut self, magnitudes: &[f32]) {
         // Upload bar magnitudes to GPU
-        self.queue.write_buffer(
-            &self.magnitudes_buffer,
-            0,
-            bytemuck::cast_slice(magnitudes),
-        );
+        self.queue
+            .write_buffer(&self.magnitudes_buffer, 0, bytemuck::cast_slice(magnitudes));
 
         let output = match self.surface.get_current_texture() {
             Ok(tex) => tex,
@@ -244,9 +243,9 @@ impl Renderer {
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.02,
-                            g: 0.02,
-                            b: 0.06,
+                            r: 0.0,
+                            g: 0.0,
+                            b: 0.0,
                             a: 1.0,
                         }),
                         store: wgpu::StoreOp::Store,

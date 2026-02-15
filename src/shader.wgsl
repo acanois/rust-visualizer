@@ -10,6 +10,7 @@ struct Params {
     num_bars: u32,
 };
 
+// This array is of size num_bars
 @group(0) @binding(0) var<storage, read> magnitudes: array<f32>;
 @group(0) @binding(1) var<uniform> params: Params;
 
@@ -20,7 +21,7 @@ fn vs_main(
 ) -> VertexOutput {
     let num_bars = f32(params.num_bars);
     let bar_width = 2.0 / num_bars;
-    let gap = bar_width * 0.15;
+    let gap = bar_width * 0.15; // The space between bars
     let actual_width = bar_width - gap;
 
     // Get magnitude for this bar (clamped to 0..2 range in clip space)
@@ -29,19 +30,32 @@ fn vs_main(
     // Bar X position (left edge, centered in its slot)
     let x_base = -1.0 + f32(instance_index) * bar_width + gap * 0.5;
 
+
+    // --------------------------------------------------------------
     // Quad vertices: 2 triangles forming a rectangle
+    // --------------------------------------------------------------
+
+    // Local position of the vertex within each instance
     var local_pos: vec2<f32>;
     switch vertex_index {
-        case 0u: { local_pos = vec2<f32>(0.0, 0.0); }            // bottom-left
-        case 1u: { local_pos = vec2<f32>(actual_width, 0.0); }    // bottom-right
-        case 2u: { local_pos = vec2<f32>(actual_width, height); }  // top-right
-        case 3u: { local_pos = vec2<f32>(0.0, 0.0); }            // bottom-left
-        case 4u: { local_pos = vec2<f32>(actual_width, height); }  // top-right
-        case 5u: { local_pos = vec2<f32>(0.0, height); }          // top-left
+        // bottom-left
+        case 0u: { local_pos = vec2<f32>(0.0, 0.0); }
+        // bottom-right
+        case 1u: { local_pos = vec2<f32>(actual_width, 0.0); }
+        // top-right  
+        case 2u: { local_pos = vec2<f32>(actual_width, height); }
+        // bottom-left
+        case 3u: { local_pos = vec2<f32>(0.0, 0.0); }
+        // top-right
+        case 4u: { local_pos = vec2<f32>(actual_width, height); }
+        // top-left
+        case 5u: { local_pos = vec2<f32>(0.0, height); }
+
         default: { local_pos = vec2<f32>(0.0, 0.0); }
     }
 
     // Position in clip space: x in [-1, 1], y starts at bottom (-1)
+    // Positions are offset by instance position
     let x = x_base + local_pos.x;
     let y = -1.0 + local_pos.y;
 
@@ -64,6 +78,9 @@ fn vs_main(
         clamp(g, 0.0, 1.0),
         clamp(b, 0.0, 1.0),
     ) * brightness;
+
+    // Returns output of type VertexOutput, a struct containing the position and
+    // color of a single vertex. This is passed to the input of the fragment shader.
     return output;
 }
 
