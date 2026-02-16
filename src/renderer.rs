@@ -19,7 +19,6 @@ pub struct Renderer {
     config: wgpu::SurfaceConfiguration,
     pipeline: wgpu::RenderPipeline,
     magnitudes_buffer: wgpu::Buffer,
-    transforms_buffer: wgpu::Buffer,
     bind_group: wgpu::BindGroup,
     num_bars: u32,
 }
@@ -226,7 +225,6 @@ impl Renderer {
             config,
             pipeline,
             magnitudes_buffer,
-            transforms_buffer,
             bind_group,
             num_bars,
         }
