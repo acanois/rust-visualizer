@@ -13,6 +13,7 @@ struct Params {
 // This array is of size num_bars
 @group(0) @binding(0) var<storage, read> magnitudes: array<f32>;
 @group(0) @binding(1) var<uniform> params: Params;
+@group(0) @binding(2) var<storage, read> transforms: array<mat4x4<f32>>;
 
 @vertex
 fn vs_main(
@@ -54,12 +55,12 @@ fn vs_main(
         default: { local_pos = vec2<f32>(0.0, 0.0); }
     }
 
-    // Position in clip space: x in [-1, 1], y starts at bottom (-1)
-    // Positions are offset by instance position
-    let x = x_base + local_pos.x;
-    let y = -1.0 + local_pos.y;
+    // Apply per-instance transform to local quad position
+    let world_pos = transforms[instance_index] * vec4<f32>(local_pos, 0.0, 1.0);
 
+    // --------------------------------------------------------------
     // Color gradient based on frequency bin and bar height
+    // --------------------------------------------------------------
     let freq_t = f32(instance_index) / num_bars;      // 0 = low freq, 1 = high freq
     let height_t = local_pos.y / max(height, 0.001);  // 0 = bottom, 1 = top of bar
 
@@ -72,7 +73,7 @@ fn vs_main(
     let brightness = 0.5 + 0.5 * height_t;
 
     var output: VertexOutput;
-    output.position = vec4<f32>(x, y, 0.0, 1.0);
+    output.position = world_pos;
     output.color = vec3<f32>(
         clamp(r, 0.0, 1.0),
         clamp(g, 0.0, 1.0),
