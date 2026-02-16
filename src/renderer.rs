@@ -1,6 +1,8 @@
 use std::sync::Arc;
 use wgpu::util::DeviceExt;
 use winit::window::Window;
+use glam::{Mat4, Vec3};
+
 
 /// Uniform parameters sent to the shader.
 #[repr(C)]
@@ -91,6 +93,18 @@ impl Renderer {
             contents: bytemuck::cast_slice(&magnitudes_data),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
+        let mut transforms: Vec<[[f32; 4]; 4]> = Vec::with_capacity(num_bars as usize);
+
+        let radius = 0.33f32;
+        for i in 0..num_bars {
+            let angle = (i as f32 / num_bars as f32) * std::f32::consts::TAU;
+            let x = radius * angle.cos();
+            let y = radius * angle.sin();
+
+            let transform = Mat4::from_translation(Vec3::new(x, y, 0.0))
+                * Mat4::from_rotation_z(angle - std::f32::consts::FRAC_PI_2);
+            transforms.push(transform);
+        }
 
         let params = Params {
             num_bars,
