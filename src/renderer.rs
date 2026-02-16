@@ -1,8 +1,7 @@
+use glam::{Mat4, Vec3};
 use std::sync::Arc;
 use wgpu::util::DeviceExt;
 use winit::window::Window;
-use glam::{Mat4, Vec3};
-
 
 /// Uniform parameters sent to the shader.
 #[repr(C)]
@@ -20,6 +19,7 @@ pub struct Renderer {
     config: wgpu::SurfaceConfiguration,
     pipeline: wgpu::RenderPipeline,
     magnitudes_buffer: wgpu::Buffer,
+    transforms_buffer: wgpu::Buffer,
     bind_group: wgpu::BindGroup,
     num_bars: u32,
 }
@@ -93,7 +93,7 @@ impl Renderer {
             contents: bytemuck::cast_slice(&magnitudes_data),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
-        let mut transforms: Vec<[[f32; 4]; 4]> = Vec::with_capacity(num_bars as usize);
+        let mut transforms_data: Vec<Mat4> = Vec::with_capacity(num_bars as usize);
 
         let radius = 0.33f32;
         for i in 0..num_bars {
@@ -103,8 +103,14 @@ impl Renderer {
 
             let transform = Mat4::from_translation(Vec3::new(x, y, 0.0))
                 * Mat4::from_rotation_z(angle - std::f32::consts::FRAC_PI_2);
-            transforms.push(transform);
+            transforms_data.push(transform);
         }
+
+        let transforms_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Transforms"),
+            contents: bytemuck::cast_slice(&transforms_data),
+            usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+        });
 
         let params = Params {
             num_bars,
@@ -140,6 +146,16 @@ impl Renderer {
                     },
                     count: None,
                 },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 2,
+                    visibility: wgpu::ShaderStages::VERTEX,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
             ],
         });
 
@@ -154,6 +170,10 @@ impl Renderer {
                 wgpu::BindGroupEntry {
                     binding: 1,
                     resource: params_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: transforms_buffer.as_entire_binding(),
                 },
             ],
         });
@@ -206,6 +226,7 @@ impl Renderer {
             config,
             pipeline,
             magnitudes_buffer,
+            transforms_buffer,
             bind_group,
             num_bars,
         }
